@@ -1,2 +1,1 @@
-# holbertonschool-simple_shell
-simple shell
+Create README files
