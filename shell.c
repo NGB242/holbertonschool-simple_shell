@@ -1,42 +1,66 @@
-#include "main.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
-#define exec "❓ UnknownCommand> "
 /**
-* main - simple UNIX command interpreter
-* This programms displays a prompt and wait an input
-* comming from an user, then it executes the command
-* and to exit, use exit or EOF.
-* Return: 0 (Success).
-*/
-
+ * main - A simple UNIX command line interpreter.
+ *
+ * Return: Always 0.
+ */
 int main(void)
 {
-	char *line = NULL;
-	size_t len = 0;
-	ssize_t nread;
-	char **args;
-	int interactive;
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t nread;
+    char *args[2];
+    pid_t pid;
 
-	interactive = isatty(STDIN_FILENO);
+    while (1)
+    {
+        /* Display the prompt */
+        printf("#cisfun$ ");
+        fflush(stdout);
 
-	while (1)
-	{
-		if (interactive)
-		{
-			write(STDOUT_FILENO, exec, strlen(exec));
-		}
-	nread = getline(&line, &len, stdin);
-	if (nread == -1)
-	{
-	break;
-	}
-	if (line[nread - 1] == '\n')
-		line[nread - 1] = '\0';
+        /* Read the command line */
+        nread = getline(&line, &len, stdin);
+        if (nread == -1) /* Handle EOF or error */
+        {
+            if (feof(stdin))
+                printf("\n");
+            break;
+        }
 
-	args = _splitline(line);
-	_execute(args);
-	free(args);
-	}
-	free(line);
-	return (0);
+        /* Remove the newline character */
+        line[nread - 1] = '\0';
+
+        /* Set up arguments for execve */
+        args[0] = line;
+        args[1] = NULL;
+
+        /* Create a child process */
+        pid = fork();
+        if (pid == -1)
+        {
+            perror("fork");
+            continue;
+        }
+        if (pid == 0) /* Child process */
+        {
+            if (execve(args[0], args, environ) == -1)
+            {
+                perror(line);
+                exit(EXIT_FAILURE);
+            }
+        }
+        else /* Parent process */
+        {
+            wait(NULL);
+        }
+    }
+
+    free(line);
+    return (0);
 }
