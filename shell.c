@@ -1,67 +1,42 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include "shell.h"
+#include "main.h"
 
+#define exec "❓ UnknownCommand> "
 /**
- * main - A simple UNIX command line interpreter.
- *
- * Return: Always 0.
- */
+* main - simple UNIX command interpreter
+* This programms displays a prompt and wait an input
+* comming from an user, then it executes the command
+* and to exit, use exit or EOF.
+* Return: 0 (Success).
+*/
+
 int main(void)
 {
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t nread;
-    char *args[2];
-    pid_t pid;
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t nread;
+	char **args;
+	int interactive;
 
-    while (1)
-    {
-        
-        printf("#cisfun$ ");
-        fflush(stdout);
+	interactive = isatty(STDIN_FILENO);
 
-        
-        nread = getline(&line, &len, stdin);
-        if (nread == -1) 
-        {
-            if (feof(stdin))
-                printf("\n");
-            break;
-        }
+	while (1)
+	{
+		if (interactive)
+		{
+			write(STDOUT_FILENO, exec, strlen(exec));
+		}
+	nread = getline(&line, &len, stdin);
+	if (nread == -1)
+	{
+	break;
+	}
+	if (line[nread - 1] == '\n')
+		line[nread - 1] = '\0';
 
-        
-        line[nread - 1] = '\0';
-
-        
-        args[0] = line;
-        args[1] = NULL;
-
-        
-        pid = fork();
-        if (pid == -1)
-        {
-            perror("fork");
-            continue;
-        }
-        if (pid == 0) 
-        {
-            if (execve(args[0], args, environ) == -1)
-            {
-                perror(line);
-                exit(EXIT_FAILURE);
-            }
-        }
-        else 
-        {
-            wait(NULL);
-        }
-    }
-
-    free(line);
-    return (0);
+	args = _splitline(line);
+	_execute(args);
+	free(args);
+	}
+	free(line);
+	return (0);
 }
