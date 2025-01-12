@@ -1,66 +1,46 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
+#include "main.h"
+
+#define BUFFER_SIZE 64
 
 /**
- * main - A simple UNIX command line interpreter.
- *
- * Return: Always 0.
+ * split_line - Splits a string into an array of words
+ * @line: The string to split
+ * Return: Array of strings, NULL on failure
  */
-int main(void)
+char **split_line(char *line)
 {
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t nread;
-    char *args[2];
-    pid_t pid;
+char **tokens = NULL;
+char *token;
+size_t count = 0, size = BUFFER_SIZE;
 
-    while (1)
-    {
-        /* Display the prompt */
-        printf("#cisfun$ ");
-        fflush(stdout);
+if (!line)
+return (NULL);
 
-        /* Read the command line */
-        nread = getline(&line, &len, stdin);
-        if (nread == -1) /* Handle EOF or error */
-        {
-            if (feof(stdin))
-                printf("\n");
-            break;
-        }
+tokens = malloc(size * sizeof(char *));
+if (!tokens)
+return (NULL);
 
-        /* Remove the newline character */
-        line[nread - 1] = '\0';
-
-        /* Set up arguments for execve */
-        args[0] = line;
-        args[1] = NULL;
-
-        /* Create a child process */
-        pid = fork();
-        if (pid == -1)
-        {
-            perror("fork");
-            continue;
-        }
-        if (pid == 0) /* Child process */
-        {
-            if (execve(args[0], args, environ) == -1)
-            {
-                perror(line);
-                exit(EXIT_FAILURE);
-            }
-        }
-        else /* Parent process */
-        {
-            wait(NULL);
-        }
-    }
-
-    free(line);
-    return (0);
+token = strtok(line, " \t\r\n\a");
+while (token)
+{
+tokens[count] = strdup(token);
+if (!tokens[count])
+{
+while (count > 0)
+free(tokens[--count]);
+free(tokens);
+return (NULL);
+}
+count++;
+if (count >= size)
+{
+size += BUFFER_SIZE;
+tokens = realloc(tokens, size * sizeof(char *));
+if (!tokens)
+return (NULL);
+}
+token = strtok(NULL, " \t\r\n\a");
+}
+tokens[count] = NULL;
+return (tokens);
 }

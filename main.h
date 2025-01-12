@@ -1,30 +1,35 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-/* Libraries */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/stat.h>
-#include "main.h"
+#include <errno.h>
 
-/* Function Prototypes */
-int main(void);
-char **_splitline(char *line);
-int _execute(char **args);
-char *_find_path_command(char *command);
-ssize_t _getline(char **lineptr, size_t *n, FILE *stream);
-pid_t _fork(void);
-int _execve(const char *pathname, char *const argv[], char *const envp[]);
-void _perror(const char *s);
-void free_line(char *line);
-void display_prompt(void);
+/* External environment variable */
+extern char **environ;
 
+/**
+ * struct builtin_s - Structure for built-in commands
+ * @name: Name of the built-in command
+ * @func: Function pointer to the built-in implementation
+ */
+typedef struct builtin_s
+{
+	char *name;
+	int (*func)(char **);
+} builtin_t;
 
-/* Déclaration de l'environnement */
-extern char(**environ);
+/* Function prototypes */
+int execute(char **args);
+char **split_line(char *line);
+char *find_in_path(char *cmd);
+char *check_access(char *cmd);
+int builtin_exit(char **args);
+int builtin_env(char **args);
+int execute_builtin(char **args);
 
 #endif /* MAIN_H */
